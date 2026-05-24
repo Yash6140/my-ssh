@@ -9,7 +9,7 @@ Only after the signature is verified does the shell loop begin every command typ
 ##Learnings:
 #TCP model-> guarantees ordered, reliable delivery of bytes. IP handles routing between machines.
 #AES-GCM -> encrypts data with a shared secret key and simultaneously produces an authentication tag, i.e meaning the receiver can verify the message wasn't tampered with in transit. It requires a unique nonce per message.
-RSA is asymmetric — anything encrypted with the public key can only be decrypted with the private key, and anything signed with the private key can be verified with the public key. This is what makes key exchange and authentication possible.
+RSA is asymmetric anything encrypted with the public key can only be decrypted with the private key, and anything signed with the private key can be verified with the public key. This is what makes key exchange and authentication possible.
 Hybrid encryption combines both: RSA to securely exchange a symmetric key, then AES-GCM for everything after.
 #Digital Signatures -> The client signs the server's random challenge with its private key; the server verifies with the stored public key. A valid signature proves key possession without the private key ever leaving the client.
 Essentially, the challenge is summarised using a hash function, which is then encrypted.
