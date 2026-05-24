@@ -68,11 +68,21 @@ client.send(signature)
 response = client.recv(2048)
 response=decrypt(response, KEY)
 if response == b"AUTH_SUCCESS":
-    MESSAGE = b"Hi Server"
-    client.send(encrypt(MESSAGE, KEY))
-    reply = client.recv(2048)
-    reply= decrypt(reply, KEY).decode('utf-8')
-    print("Reply:", reply)
+    while True: 
+        command= input("Enter a command: ")
+        if command.lower() == "exit":
+            client.sendall(b"Exit")
+            break
+        if command=="ls":
+            command="dir"
+        elif command=="pwd":
+            command="cd"
+        
+        encrypted_command=encrypt(command.encode('utf-8'), KEY)
+        client.sendall(encrypted_command)
+        response = client.recv(2048)
+        response=decrypt(response, KEY).decode('utf-8')
+        print(f"Response from server: {response}")
     client.close()
 else:
     print("Connection closed by the server!")

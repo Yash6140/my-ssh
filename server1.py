@@ -1,10 +1,12 @@
 import socket
+from unittest import result
 from crypto import encrypt, decrypt
 from cryptography.hazmat.primitives.asymmetric import rsa 
 from cryptography.hazmat.primitives import serialization as serialisation
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 import json,os
+import subprocess
 
 privatekey= rsa.generate_private_key(public_exponent=65537, key_size=2048)
 public_key=privatekey.public_key()
@@ -54,21 +56,42 @@ while True:
       public_key.verify(received_signature,challenge,padding.PSS(mgf=padding.MGF1(hashes.SHA256()),salt_length=padding.PSS.MAX_LENGTH),hashes.SHA256())
       print("Authentication Successful!")
       communication_socket.send(encrypt(b"AUTH_SUCCESS", aes_gcm_key))
+      state=1 #1 means authenticated, 0 means not authenticated
 
       
-      encrypted_message = communication_socket.recv(2048)
-      #print(f"Encrypt:{encrypted_message}")
-      message = decrypt(encrypted_message, aes_gcm_key)
-      print(f"The message is: {message.decode('utf-8')}")
-      message2="Server has received the message"
-      communication_socket.send(encrypt(message2.encode('utf-8'), aes_gcm_key))
-      communication_socket.close()
-      print("Connection closed")
+      
       
     except Exception as e:
+      state=0
       print(f"Authentication Failed! {repr(e)}")
       communication_socket.send(encrypt(b"AUTH_FAILED", aes_gcm_key))
       communication_socket.close()
+    
+    encrypted_message = communication_socket.recv(2048) 
+    if state==1:
+      while encrypted_message != b"exit":
+        #print(f"Encrypt:{encrypted_message}")
+        message = decrypt(encrypted_message, aes_gcm_key).decode('utf-8')
+        #print(f"The message is: {message.decode('utf-8')}")
+        result = subprocess.run(message, capture_output=True, text=True,shell=True)
+        #encrypt 
+        result = result.stdout if result.stdout else result.stderr
+        encrypted_result=encrypt(result.encode('utf-8'), aes_gcm_key)
+        communication_socket.send(encrypted_result)
+
+        #message2="Server has received the message"
+        #communication_socket.send(encrypt(message2.encode('utf-8'), aes_gcm_key))
+        #communication_socket.close()
+        #print("Connection closed")
+        encrypted_message = communication_socket.recv(2048)
+      
+      communication_socket.close()                
+
+      print("Connection closed")
+      
+  
+
+    
 
 
 
